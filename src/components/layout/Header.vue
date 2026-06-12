@@ -39,6 +39,14 @@ const themeStore = useThemeStore()
               >Product</router-link
             >
           </li>
+          <li class="nav-item">
+            <router-link
+              class="nav-link active"
+              aria-current="page"
+              :to="{ name: APP_ROUTE_NAMES.PRODUCT_CREATE }"
+              >Add Product</router-link
+            >
+          </li>
         </ul>
         <ul class="d-flex navbar-nav">
           <li class="nav-item dropdown">
