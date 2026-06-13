@@ -49,7 +49,7 @@ async function handleSubmit() {
         bestseller: Boolean(productObj.isBestSeller),
       }
       if (productIdForUpdate) {
-        // updated
+        // update
         await productService.updateProduct(productIdForUpdate, productData)
         showSuccess('Product updated successfully')
         router.push({ name: APP_ROUTE_NAMES.PRODUCT_LIST })
