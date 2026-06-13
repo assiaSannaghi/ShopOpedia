@@ -1,13 +1,14 @@
 <script setup>
 import { PRODUCT_CATEGORIES } from '@/constants/appConstants'
-import { APP_ROUTE_NAMES } from '@/constants/routeNames'
 import productService from '@/services/productService'
+import { onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useSwal } from '@/utility/useSwal'
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { APP_ROUTE_NAMES } from '@/constants/routeNames'
 
+const { showSuccess } = useSwal()
 const router = useRouter()
-const { showConfirm, showError, showSuccess } = useSwal()
+const route = useRoute()
 
 const errorList = reactive([])
 const loading = ref(false)
@@ -21,6 +22,7 @@ const productObj = reactive({
   category: '',
   image: 'https://placehold.co/600x400',
 })
+const productIdForUpdate = route.params.id
 
 async function handleSubmit() {
   try {
@@ -46,11 +48,18 @@ async function handleSubmit() {
         tags: productObj.tags.length > 0 ? productObj.tags.split(',').map((tag) => tag.trim()) : [],
         bestseller: Boolean(productObj.isBestSeller),
       }
-
-      await productService.createProduct(productData)
-      showSuccess('Product created successfully')
-      router.push({ name: APP_ROUTE_NAMES.PRODUCT_LIST })
-      console.log(productData)
+      if (productIdForUpdate) {
+        // update
+        await productService.updateProduct(productIdForUpdate, productData)
+        showSuccess('Product updated successfully')
+        router.push({ name: APP_ROUTE_NAMES.PRODUCT_LIST })
+      } else {
+        // create
+        await productService.createProduct(productData)
+        showSuccess('Product created successfully')
+        router.push({ name: APP_ROUTE_NAMES.PRODUCT_LIST })
+        // console.log(productData)
+      }
     }
   } catch (e) {
     console.log(e)
@@ -58,6 +67,21 @@ async function handleSubmit() {
     loading.value = false
   }
 }
+
+onMounted(async () => {
+  if (!productIdForUpdate) return
+  loading.value = true
+
+  try {
+    const product = await productService.getProductsById(productIdForUpdate)
+
+    Object.assign(productObj, { ...product, tags: product.tags.join(', ') })
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
@@ -65,7 +89,9 @@ async function handleSubmit() {
     <div class="row border p-4 my-5 rounded">
       <div class="col-9">
         <form @submit.prevent="handleSubmit">
-          <div class="h2 text-center text-success">Create Product</div>
+          <div class="h2 text-center text-success">
+            {{ productIdForUpdate ? 'Update' : 'Create' }} Product
+          </div>
           <hr />
           <div v-if="errorList.length > 0" class="alert alert-danger pb-0">
             Please fix the following errors:
@@ -128,7 +154,12 @@ async function handleSubmit() {
             <button :disabled="loading" class="btn btn-success m-2 w-25">
               <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>Submit
             </button>
-            <a href="/" class="btn btn-secondary m-2 w-25"> Cancel </a>
+            <router-link
+              :to="{ name: APP_ROUTE_NAMES.PRODUCT_LIST }"
+              class="btn btn-secondary m-2 w-25"
+            >
+              Cancel
+            </router-link>
           </div>
         </form>
       </div>
