@@ -14,7 +14,7 @@ import {
 const products = ref([])
 const loading = ref(false)
 const selectedCategory = ref('ALL')
-const selectSortOption = ref(SORT_OPTIONS[0])
+const selectedSortOption = ref(SORT_OPTIONS[0])
 const categoryList = ref(['ALL', ...PRODUCT_CATEGORIES])
 const search = ref('')
 
@@ -30,6 +30,19 @@ const filteredProductList = computed(() => {
     temArray = temArray.filter((item) =>
       item.name.toUpperCase().includes(search.value.toUpperCase()),
     )
+  }
+
+  if (selectedSortOption.value === SORT_PRICE_LOW_HIGH) {
+    temArray = temArray.sort((a, b) => a.price - b.price)
+  }
+  if (selectedSortOption.value === SORT_PRICE_HIGH_LOW) {
+    temArray = temArray.sort((a, b) => b.price - a.price)
+  }
+  if (selectedSortOption.value === SORT_NAME_A_Z) {
+    temArray = temArray.sort((a, b) => a.name.localeCompare(b.name))
+  }
+  if (selectedSortOption.value === SORT_NAME_Z_A) {
+    temArray = temArray.sort((a, b) => b.name.localeCompare(a.name))
   }
 
   return temArray
@@ -111,13 +124,16 @@ onMounted(async () => fetchProducts())
               data-bs-toggle="dropdown"
             >
               <i class="bi bi-sort-down"></i>
-              <span class="text-capitalize">SORT</span>
+              <span class="text-capitalize">{{ selectedSortOption }}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-              <li>
-                <button class="dropdown-item py-2 d-flex align-items-center gap-2">
+              <li v-for="(sort, index) in SORT_OPTIONS" :key="index">
+                <button
+                  @click="selectedSortOption = sort"
+                  class="dropdown-item py-2 d-flex align-items-center gap-2"
+                >
                   <i class="bi"></i>
-                  <span class="text-capitalize"> SORT OPTIONS </span>
+                  <span class="text-capitalize"> {{ sort }} </span>
                 </button>
               </li>
             </ul>

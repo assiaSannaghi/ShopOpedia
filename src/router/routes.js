@@ -8,7 +8,7 @@ import ContactUs from '@/views/home/ContactUs.vue'
 import ProductList from '@/views/product/ProductList.vue'
 import ProductUpsert from '@/views/product/ProductUpsert.vue'
 import { APP_ROUTE_NAMES } from '@/constants/routeNames'
-
+import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,6 +59,14 @@ const router = createRouter({
     },
 
   ],
+})
+
+router.beforeEach(async (toString, from) => {
+  const authStore = useAuthStore()
+
+  if (!authStore.initialized) {
+    await authStore.initilizeAuth()
+  }
 })
 
 export default router
