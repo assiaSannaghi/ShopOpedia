@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { auth, db } from "@/utility/firebaseConfig";
 import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ROLE_ADMIN, ROLE_USER } from "@/constants/appConstants";
 
 export const useAuthStore = defineStore("authStore", () => {
@@ -16,16 +16,24 @@ export const useAuthStore = defineStore("authStore", () => {
     const isAdmin = computed(() => role.value === ROLE_ADMIN)
 
     const initilizeAuth = async () => {
-        console.log('initializedAuth')
-
-        onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                user.value = firebaseUser
-                initialized.value = true
-            } else {
-                clearUser()
-            }
+        return new Promise(resolve => {
+            onAuthStateChanged(auth, async (firebaseUser) => {
+                if (firebaseUser) {
+                    user.value = firebaseUser
+                    await fetchUserRole(firebaseUser.uid)
+                    initialized.value = true
+                } else {
+                    clearUser()
+                }
+                resolve()
+            })
         })
+
+    }
+
+    const fetchUserRole = async (uid) => {
+        const userDoc = await getDoc(doc(db, 'users', uid))
+        role.value = userDoc.exists() ? userDoc.data().role : ''
     }
 
     const signUpUser = async (email, password) => {
@@ -55,7 +63,6 @@ export const useAuthStore = defineStore("authStore", () => {
             const userCredentials = await signInWithEmailAndPassword(auth, email, password)
 
             user.value = userCredentials.user
-            role.value = ROLE_USER
             error.value = null
         } catch (err) {
             error.value = err.message
@@ -102,4 +109,6 @@ export const useAuthStore = defineStore("authStore", () => {
         initilizeAuth,
         signOutUser
     }
-})
+
+}
+)

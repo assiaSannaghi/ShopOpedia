@@ -3,8 +3,9 @@ import { PRODUCT_CATEGORIES } from '@/constants/appConstants'
 import productService from '@/services/productService'
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useSwal } from '@/utility/useSwal'
+import { useSwal } from '@/composibles/useSwal'
 import { APP_ROUTE_NAMES } from '@/constants/routeNames'
+import { uploadToCloudinary } from '@/utility/cloudinary'
 
 const { showSuccess } = useSwal()
 const router = useRouter()
@@ -12,6 +13,7 @@ const route = useRoute()
 
 const errorList = reactive([])
 const loading = ref(false)
+const isImageLoading = ref(false)
 const productObj = reactive({
   name: '',
   description: '',
@@ -65,6 +67,22 @@ async function handleSubmit() {
     console.log(e)
   } finally {
     loading.value = false
+  }
+}
+
+async function handleImageUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    isImageLoading.value = true
+    const imageUrl = await uploadToCloudinary(file)
+    productObj.image = imageUrl
+  } catch (err) {
+    console.error(err)
+    throw err
+  } finally {
+    isImageLoading.value = false
   }
 }
 
@@ -147,12 +165,21 @@ onMounted(async () => {
           <div class="mb-3">
             <label class="form-label">Image</label>
             <div class="input-group">
-              <input type="file" class="form-control" />
+              <input
+                @change="handleImageUpload"
+                :disabled="isImageLoading"
+                type="file"
+                class="form-control"
+              />
             </div>
           </div>
           <div class="pt-3">
-            <button :disabled="loading" class="btn btn-success m-2 w-25">
-              <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>Submit
+            <button :disabled="loading || isImageLoading" class="btn btn-success m-2 w-25">
+              <span
+                v-if="loading || isImageLoading"
+                class="spinner-border spinner-border-sm me-2"
+              ></span
+              >Submit
             </button>
             <router-link
               :to="{ name: APP_ROUTE_NAMES.PRODUCT_LIST }"
@@ -165,7 +192,7 @@ onMounted(async () => {
       </div>
       <div class="col-3">
         <img
-          :src="`https://placehold.co/600x400`"
+          :src="productObj.image"
           class="img-fluid w-100 m-3 p-3 rounded"
           alt="Product
         preview"

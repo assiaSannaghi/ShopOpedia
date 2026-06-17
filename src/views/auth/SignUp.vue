@@ -1,7 +1,7 @@
 <script setup>
 import { APP_ROUTE_NAMES } from '@/constants/routeNames'
 import { useAuthStore } from '@/stores/authStore'
-import { useSwal } from '@/utility/useSwal'
+import { useSwal } from '@/composibles/useSwal'
 import { reactive, ref } from 'vue'
 
 const error = ref('')

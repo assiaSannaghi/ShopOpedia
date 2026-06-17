@@ -52,6 +52,9 @@ const authStore = useAuthStore()
           </li>
         </ul>
         <ul class="d-flex navbar-nav">
+          <li v-if="authStore.isAuthenticated" class="nav-link">
+            Welcome, {{ authStore.user?.email }}
+          </li>
           <li class="nav-item dropdown">
             <a
               class="nav-link dropdown-toggle"
